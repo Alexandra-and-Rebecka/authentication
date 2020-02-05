@@ -27,11 +27,12 @@ public class Client {
             out.writeUTF(username);
             out.writeUTF(password);
 
+            System.out.println(in.readUTF());
+
             in.close();
             out.close();
             socket.close();
 
-            System.out.println(in.readUTF());
 
             System.out.println("Connection Closed");
 
