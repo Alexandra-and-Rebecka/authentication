@@ -1,6 +1,8 @@
 package com.example.authentication;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 import com.example.authentication.commun.Client;
 

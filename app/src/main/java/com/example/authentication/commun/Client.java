@@ -1,5 +1,8 @@
 package com.example.authentication.commun;
 
+import android.content.Context;
+import android.widget.Toast;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -12,7 +15,7 @@ public class Client {
     private DataInputStream in = null;
     private DataOutputStream out = null;
 
-    public Client( String address, int port, String username, String password) {
+    public Client(String address, int port, String username, String password) {
         try {
             socket = new Socket(address, port);
             in = new DataInputStream(socket.getInputStream());
