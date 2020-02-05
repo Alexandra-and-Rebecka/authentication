@@ -31,6 +31,8 @@ public class Client {
             out.close();
             socket.close();
 
+            System.out.println(in.readUTF());
+
             System.out.println("Connection Closed");
 
 
