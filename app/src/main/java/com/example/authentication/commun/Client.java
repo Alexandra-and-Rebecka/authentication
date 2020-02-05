@@ -1,8 +1,5 @@
 package com.example.authentication.commun;
 
-import android.content.Context;
-import android.widget.Toast;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,6 +18,9 @@ public class Client {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
+            out.writeUTF("login");
+            out.writeUTF("register");
+
             String received = in.readUTF();
             System.out.println(received);
 
@@ -33,9 +33,7 @@ public class Client {
             out.close();
             socket.close();
 
-
             System.out.println("Connection Closed");
-
 
         } catch (IOException e) {
             System.out.println(e);
