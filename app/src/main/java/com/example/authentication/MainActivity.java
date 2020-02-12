@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new CreateClient(username.getText().toString(), password.getText().toString()).execute();
+                new CreateClient(username.getText().toString(), password.getText().toString(), getApplicationContext()).execute();
             }
         });
 

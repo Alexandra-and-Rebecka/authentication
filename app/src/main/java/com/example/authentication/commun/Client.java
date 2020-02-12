@@ -1,9 +1,27 @@
 package com.example.authentication.commun;
 
+import android.content.Context;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.CertificateException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 
 public class Client {
@@ -12,14 +30,32 @@ public class Client {
     private DataInputStream in = null;
     private DataOutputStream out = null;
 
-    public Client(String address, int port, String username, String password) {
+    public Client(String address, int port, String username, String password, Context context) {
         try {
-            socket = new Socket(address, port);
+            KeyStore truststore = KeyStore.getInstance("PKCS12");
+            char[] truststorePassword = "AlexReb123!".toCharArray();
+
+            InputStream keyStoreData = context.getAssets().open("client.truststore");
+            truststore.load(keyStoreData, truststorePassword);
+
+            //Security.addProvider(new BouncyCastleProvider());
+
+            String trustMgrFactAlg = TrustManagerFactory.getDefaultAlgorithm();
+            TrustManagerFactory trustMgrFact = TrustManagerFactory.getInstance(trustMgrFactAlg);
+            trustMgrFact.init(truststore);
+
+            SSLContext clientContext = SSLContext.getInstance("TLS");
+            clientContext.init(null, trustMgrFact.getTrustManagers(), null);
+
+            SSLSocketFactory fact = clientContext.getSocketFactory();
+            socket = (SSLSocket) fact.createSocket(address, port) ;
+            System.out.println("Connected");
+
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
             out.writeUTF("login");
-            out.writeUTF("register");
+            //out.writeUTF("register");
 
             String received = in.readUTF();
             System.out.println(received);
@@ -35,7 +71,7 @@ public class Client {
 
             System.out.println("Connection Closed");
 
-        } catch (IOException e) {
+        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | KeyManagementException e) {
             System.out.println(e);
         }
     }
