@@ -64,6 +64,7 @@ public class Client {
             out.writeUTF(password);
 
             System.out.println(in.readUTF());
+            System.out.println(in.readUTF());
 
             in.close();
             out.close();
