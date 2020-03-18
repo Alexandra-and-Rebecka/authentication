@@ -6,18 +6,16 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.security.KeyManagementException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.Security;
-import java.security.cert.CertificateException;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -32,34 +30,75 @@ public class Client {
 
     public Client(String address, int port, String username, String password, Context context) {
         try {
-            KeyStore truststore = KeyStore.getInstance("PKCS12");
+
+            Security.addProvider(new BouncyCastleProvider());
+
+            KeyStore truststore = KeyStore.getInstance("PKCS12", "BC");
+            KeyStore keystore = KeyStore.getInstance("PKCS12", "BC");
             char[] truststorePassword = "AlexReb123!".toCharArray();
 
-            InputStream keyStoreData = context.getAssets().open("client.truststore");
-            truststore.load(keyStoreData, truststorePassword);
+            String tspath = context.getFilesDir() + "/" + "clientTest.truststore";
+            String kspath = context.getFilesDir() + "/" + "clientTest.keystore";
 
-            //Security.addProvider(new BouncyCastleProvider());
+            InputStream trustStoreData = context.openFileInput("clientTest.truststore");
+            truststore.load(trustStoreData, truststorePassword);
+
+            InputStream keyStoreData = context.openFileInput("clientTest.keystore");
+            keystore.load(keyStoreData, truststorePassword);
+
 
             String trustMgrFactAlg = TrustManagerFactory.getDefaultAlgorithm();
             TrustManagerFactory trustMgrFact = TrustManagerFactory.getInstance(trustMgrFactAlg);
             trustMgrFact.init(truststore);
 
-            SSLContext clientContext = SSLContext.getInstance("TLS");
-            clientContext.init(null, trustMgrFact.getTrustManagers(), null);
+            String keystoreMgrAlg = KeyManagerFactory.getDefaultAlgorithm();
+            KeyManagerFactory keyMgrFact = KeyManagerFactory.getInstance(keystoreMgrAlg);
+            keyMgrFact.init(keystore, truststorePassword);
+
+            SSLContext clientContext = SSLContext.getInstance("TLSv1");
+            clientContext.init(keyMgrFact.getKeyManagers(), trustMgrFact.getTrustManagers(), null);
 
             SSLSocketFactory fact = clientContext.getSocketFactory();
             socket = (SSLSocket) fact.createSocket(address, port) ;
             System.out.println("Connected");
 
             in = new DataInputStream(socket.getInputStream());
+            InputStream inputStream = socket.getInputStream();
             out = new DataOutputStream(socket.getOutputStream());
 
-            out.writeUTF("login");
-            //out.writeUTF("register");
+            //out.writeUTF("login");
+            out.writeUTF("register");
 
-            String received = in.readUTF();
-            System.out.println(received);
+            /*byte[] buff = new byte[8000];
+            int bytesRead = (inputStream.read(buff));
+            ByteArrayOutputStream bao = new ByteArrayOutputStream();
+            System.out.println(bytesRead);
+            bao.write(buff, 0, bytesRead);
 
+            byte[] data = bao.toByteArray();
+            writeFileOnInternalStorage(tspath, data);
+
+            System.out.println("Okay");
+            out.writeUTF("Trustore Received");
+
+            buff = new byte[8000];
+            bytesRead = (inputStream.read(buff));;
+            bao = new ByteArrayOutputStream();
+                bao.write(buff, 0, bytesRead);
+
+            data = bao.toByteArray();
+            writeFileOnInternalStorage(kspath, data);
+
+            System.out.println("Okay");
+            out.writeUTF("Keystore Received");
+
+            //String received = in.readUTF();
+            //System.out.println(received);
+
+            //OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("clientTP.keystore", Context.MODE_PRIVATE));
+            //outputStreamWriter.write(received);
+            //outputStreamWriter.close();
+*/
             out.writeUTF(username);
             out.writeUTF(password);
 
@@ -72,8 +111,23 @@ public class Client {
 
             System.out.println("Connection Closed");
 
-        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | KeyManagementException e) {
+        } catch (Exception e) {
             System.out.println(e);
         }
+    }
+    public void writeFileOnInternalStorage(String path, byte[] data) throws IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+
+        try{
+            FileOutputStream stream = new FileOutputStream(path);
+            stream.write(data);
+        } catch (FileNotFoundException e1)
+        {
+            e1.printStackTrace();
+        }
+
     }
 }
